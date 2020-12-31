@@ -1,0 +1,260 @@
+create schema Project1
+
+create  table Suppliers
+(SupplierID INT NOT NULL,
+CompanyName VARCHAR(15),
+ContactLastName VARCHAR(15),
+ContactFirstName VARCHAR(15),
+Phone CHAR(12),
+PRIMARY KEY (SupplierID));
+
+create table Books
+(BookID INT NOT NULL,
+Title VARCHAR(30),
+Unit_Price DECIMAL(4,2),
+Author VARCHAR(15),
+Unit_in_stock CHAR(2),
+SupplierID INT,
+SubjectID INT,
+PRIMARY KEY(BookID));
+
+create table Subjects
+(SubjectID     INT NOT NULL,
+CategoryName VARCHAR(15),
+PRIMARY KEY(SubjectID));
+
+create table OrderDetails
+(BookID INT NOT NULL,
+OrderID INT NOT NULL,
+Quantity INT,
+PRIMARY KEY(BookID, OrderID));
+
+create table Customers
+(CustomerID INT NOT NULL,
+LastName VARCHAR(15),
+FirstName VARCHAR(15),
+Phone CHAR(12),
+PRIMARY KEY(CustomerID));
+
+create table Orders
+(OrderID INT NOT NULL,
+CustomerID INT,
+EmployeeID INT,
+OrderDate DATE,
+ShippedDate DATE,
+ShipperID INT,
+PRIMARY KEY(OrderID));
+
+create table Employees
+(EmployeeID INT,
+LastName VARCHAR(15),
+FirstName VARCHAR(15));
+
+create table Shippers
+(ShipperID INT NOT NULL,
+ShipperName VARCHAR(10),
+PRIMARY KEY(ShipperID));
+
+INSERT INTO Suppliers
+VALUES (1,'Amazon','Hamilton','Laurell','605-145-1875');
+INSERT INTO Suppliers
+VALUES (2,'Ebay','Koontz','Dean','605-244-1104');
+INSERT INTO Suppliers
+VALUES (3,'Booksamillion','Roberts','Nora','916-787-3320');
+INSERT INTO Suppliers
+VALUES (4,'University','Carter','Stephen','916-412-2004');
+
+INSERT INTO Books
+VALUES (1,'The Quickie','15.94','James','5',3,1);
+INSERT INTO Books
+VALUES (2,'Blaze','13.24','Richard','2',3,1);
+INSERT INTO Books
+VALUES (3,'The Navigator','14.01','Clive','10',2,1);
+INSERT INTO Books
+VALUES (4,'Birmingham','19.99','Tim','12',3,2);
+INSERT INTO Books
+VALUES (5,'North Caroline Ghosts','7.95','Lynne','5',2,2);
+INSERT INTO Books
+VALUES (6,'Why I still live in Louisiana','5.95','Ellen','30',1,3);
+INSERT INTO Books
+VALUES (7,'The World Is Flat','30','Thomas','17',3,4);
+
+INSERT INTO Subjects
+VALUES (1,'Fiction');
+INSERT INTO Subjects
+VALUES (2,'History');
+INSERT INTO Subjects
+VALUES (3,'Travel');
+INSERT INTO Subjects
+VALUES (4,'Technology');
+
+INSERT INTO Employees
+VALUES (1,'Larson','Erik');
+INSERT INTO Employees
+VALUES (2,'Steely','John');
+
+INSERT INTO Shippers
+VALUES (1,'UPS');
+INSERT INTO Shippers
+VALUES (2,'USPS');
+INSERT INTO Shippers
+VALUES (3,'FedEx');
+
+INSERT INTO Customers
+VALUES (1,'Lee','James','916-541-4568');
+INSERT INTO Customers
+VALUES (2,'Smith','John','916-057-0087');
+INSERT INTO Customers
+VALUES (3,'See','Lisa','605-054-0010');
+INSERT INTO Customers
+VALUES (4,'Collins','Jackie','605-044-6582');
+
+INSERT INTO Orders
+VALUES (1,1,1,'08-01-18','08-03-18',1);
+INSERT INTO Orders
+VALUES (2,1,2,'08-04-18',NULL,NULL);
+INSERT INTO Orders
+VALUES (3,2,1,'08-01-18','08-03-18',2);
+INSERT INTO Orders
+VALUES (4,4,2,'08-04-18','08-05-18',1);
+
+INSERT INTO OrderDetails
+VALUES (1,1,2);
+INSERT INTO OrderDetails
+VALUES (4,1,1);
+INSERT INTO OrderDetails
+VALUES (6,2,2);
+INSERT INTO OrderDetails
+VALUES (7,2,3);
+INSERT INTO OrderDetails
+VALUES (5,3,1);
+INSERT INTO OrderDetails
+VALUES (3,4,1);
+INSERT INTO OrderDetails
+VALUES (4,4,1);
+INSERT INTO OrderDetails
+VALUES (7,4,1);
+
+select   Title
+from     Books
+where    Unit_in_stock > 5 
+
+SELECT   B.Unit_Price AS Total
+FROM     Books B, Customers C, Orders O
+WHERE    B.BookID=5 AND C.CustomerID=2 AND O.OrderID=2;
+
+select   LastName,FirstName 
+from 	   customers,orders,orderDetails,Books
+where 	 customers.CustomerID=orders.CustomerID and
+		     orders.OrderID=OrderDetails.OrderID and
+		     OrderDetails.BookID=Books.BookID
+group by LastName,FirstName
+having  sum(Quantity*Unit_Price)<20;
+
+select	Title, ShipperName
+from	  Shippers, Books, Orders, orderdetails
+where 	Orders.ShipperID = shippers.ShipperID AND 
+		    Orders.shippedDate= '08/05/18' AND
+        Orders.OrderID = orderdetails.OrderID AND
+        Books.BookID = orderdetails.BookID 
+
+Select	Title 
+from 	  Books
+where	  BookID IN  (Select	BookID
+				   from 	orderdetails, Customers, Orders,
+                   where	customers.customerID = orders.customerID AND
+							customers.FirstName = 'John Steely' AND
+                            orders.orderID = orderdetails.orderID);
+
+select   d.title as booktitle
+from     customers a
+Join     orders b on (a.customerid = b.customerid)
+Join     orderdetails c on (b.orderid = c.orderid)
+Join     books d on (c.bookid = d.bookid)
+where    concat(a.firstname, a.lastname) in ('John Smith', 'Jackie Collins')
+group by d.title;
+
+select   d.title as booktitle, sum(c.quantity) as qty
+from     customers a
+Join     orders b on (a.customerid = b.customerid)
+Join     orderdetails c on (b.orderid = c.orderid)
+Join     books d on (c.bookid = d.bookid)
+where    concat(a.firstname, a.lastname) in ('John Smith', 'Jackie Collins')
+group    by d.title
+order by 2 asc;
+
+select   concat(a.firstname, a.lastname) as customername
+from     customers a
+Join     orders b on (a.customerid = b.customerid)
+Join     orderdetails c on (b.orderid = c.orderid)
+Join     books d on (c.bookid = d.bookid)
+where    lower(d.author) like '%louisiana%'
+group by concat(a.firstname, a.lastname) ;
+
+select   a.categoryname, min(b.unit_price) as minprice
+from     subjects a
+Join     books b on (a.subjectid = b.subjectid)
+group by a.categoryname
+
+select   d.title as booktitle, sum(c.quantity) as qty
+from     customers a
+Join     orders b on (a.customerid = b.customerid)
+Join     orderdetails c on (b.orderid = c.orderid)
+Join     books d on (c.bookid = d.bookid)
+where    (b.shippedDate is null or b.shippedDate <= '08/04/18' )
+group by d.title ;
+
+select   concat(a.firstname, a.lastname) as customername, count(b.BookId) as cnt, sum(c.quantity) as qty
+from     customers a
+Join     orders b on (a.customerid = b.customerid)
+Join     orderdetails c on (b.orderid = c.orderid)
+Join     books d on (c.bookid = d.bookid)
+group    by concat(a.firstname, a.lastname)
+having   count(b.bookid) > 1
+order by 3 desc;
+                            
+select   concat(a.firstname, a.lastname) as customername, a.phone, count(b.bookid) as cnt
+from     customers a
+Join     orders b on (a.customerid = b.customerid)
+Join     orderdetails c on (b.orderid = c.orderid)
+Join     books d on (c.bookid = d.bookid)
+group    by concat(a.firstname, a.lastname) , a.phone
+having   count(b.bookid) > 1 ;
+
+SELECT 	 DISTINCT t1.firstname, t1.lastname
+FROM 		 customers t1
+JOIN		 orders t2
+ON 		   t1.customerid = t2.customerid
+JOIN 		 orderdetails t3
+ON 		   t2.orderid = t3.orderid
+JOIN 		 books t4
+ON 		   t3.bookid = t4.bookid
+WHERE 	 t4.author = 'Thomas';
+
+SELECT	 DISTINCT t1.firstname,t1.lastname,t4.title
+FROM 		 customers t1
+JOIN 		 orders t2
+ON 		   t1.customerid = t2.customerid
+JOIN 		 orderdetails t3
+ON 		   t2.orderid = t3.orderid
+JOIN		 books t4
+ON 		   t3.bookid = t4.bookid
+JOIN 		 subjects t5
+ON		   t4.subjectid = t5.subjectid
+WHERE 	 t5.categoryname IN ( 'Fiction', 'Travel' );
+
+select 	 d.title as booktitle
+from 		 customers a
+Join 		 orders b on (a.customerid = b.customerid)
+Join 		 orderdetails c on (b.orderid = c.orderid)
+Join 		 books d on (c.bookid = d.bookid)
+where    concat(a.firstname, a.lastname) in ('John Smith', 'Jackie Collins')
+group by d.title;
+
+select 	 concat(a.firstname, a.lastname) as customername
+from 		 customers a
+Join 		 orders b on (a.customerid = b.customerid)
+Join		 orderdetails c on (b.orderid = c.orderid)
+Join 		 books d on (c.bookid = d.bookid)
+where 	 lower(d.author) like '%louisiana%'
+group by concat(a.firstname, a.lastname) ;
